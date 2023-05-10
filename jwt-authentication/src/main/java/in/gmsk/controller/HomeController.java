@@ -1,34 +1,37 @@
 package in.gmsk.controller;
 
 import in.gmsk.dto.AuthRequest;
+import in.gmsk.dto.AuthResponseEntity;
+import in.gmsk.dto.ErrorResponseEntity;
+import in.gmsk.dto.SuccessResponseEntity;
 import in.gmsk.model.UserInfo;
 import in.gmsk.service.serviceImpl.JwtServiceImpl;
 import in.gmsk.service.serviceImpl.UserServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
 public class HomeController {
-
     private final Logger logger =
             LoggerFactory.getLogger(HomeController.class);
 
-    @Autowired
-    private UserServiceImpl userService;
+    private final UserServiceImpl userService;
+    private final JwtServiceImpl jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private JwtServiceImpl jwtService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    public HomeController(UserServiceImpl userService, JwtServiceImpl jwtService, AuthenticationManager authenticationManager) {
+        this.userService = userService;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+    }
 
     @GetMapping("/welcome")
     public String home() {
@@ -51,13 +54,14 @@ public class HomeController {
     }
 
     @PostMapping("/addNewUser")
-    public String addNewUser(@RequestBody UserInfo userInfo) {
+    public ResponseEntity<?> addNewUser(@RequestBody UserInfo userInfo) {
         logger.info("Inside the add new user method.");
-        return userService.addUser(userInfo);
+        String output = userService.addUser(userInfo);
+        return new ResponseEntity<>(new SuccessResponseEntity(output), HttpStatus.CREATED) ;
     }
 
     @PostMapping("/authenticate")
-    public String authenticationAndGetToken(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<?> authenticationAndGetToken(@RequestBody AuthRequest authRequest) {
         logger.info("Inside the authentication and get token method");
         Authentication authentication =
                 authenticationManager.authenticate
@@ -65,9 +69,10 @@ public class HomeController {
                                 authRequest.getPassword()));
         if (authentication.isAuthenticated()) {
             logger.info("Token Generated Successfully!");
-            return jwtService.generateToken(authRequest.getUsername());
+            String tokenValue = jwtService.generateToken(authRequest.getUsername());
+            return new ResponseEntity<>(new AuthResponseEntity(tokenValue), HttpStatus.CREATED);
         } else {
-            throw new UsernameNotFoundException("Invalid user request !");
+            return new ResponseEntity<>(new ErrorResponseEntity("Invalid user request!"), HttpStatus.CONFLICT);
         }
     }
 }
