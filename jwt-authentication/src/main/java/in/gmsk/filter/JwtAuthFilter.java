@@ -1,7 +1,11 @@
 package in.gmsk.filter;
 
 import in.gmsk.config.UserInfoUserDetailsService;
+import in.gmsk.exception.JWTAuthTokenExpired;
+import in.gmsk.exception.ResourceNotFound;
 import in.gmsk.service.serviceImpl.JwtServiceImpl;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +34,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String username = null;
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
-            username = jwtService.extractUsername(token);
+            try{
+                username = jwtService.extractUsername(token);
+            }catch (ExpiredJwtException | MalformedJwtException e ){
+                throw new JWTAuthTokenExpired("Your login token is no longer valid.","Authentication Filter",e.getMessage());
+            }
+
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
