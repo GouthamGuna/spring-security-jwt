@@ -1,8 +1,7 @@
 package in.gmsk.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import in.gmsk.config.UserInfoUserDetailsService;
-import in.gmsk.exception.JWTAuthTokenExpired;
-import in.gmsk.exception.ResourceNotFound;
 import in.gmsk.service.serviceImpl.JwtServiceImpl;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -19,6 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -37,7 +37,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             try{
                 username = jwtService.extractUsername(token);
             }catch (ExpiredJwtException | MalformedJwtException e ){
-                throw new JWTAuthTokenExpired("Your login token is no longer valid.","Authentication Filter",e.getMessage());
+                byte[] body = new ObjectMapper().writeValueAsBytes(Collections.singletonMap("error", e));
+                response.getOutputStream().write(body);
+                //throw new JWTAuthTokenExpired("Your login token is no longer valid.","Authentication Filter",e.getMessage());
             }
 
         }
