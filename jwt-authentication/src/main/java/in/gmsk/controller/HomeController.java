@@ -54,25 +54,30 @@ public class HomeController {
     }
 
     @PostMapping("/addNewUser")
-    public ResponseEntity<?> addNewUser(@RequestBody UserInfo userInfo) {
+    public ResponseEntity< ? > addNewUser(@RequestBody UserInfo userInfo) {
         logger.info("Inside the add new user method.");
         String output = userService.addUser(userInfo);
-        return new ResponseEntity<>(new SuccessResponseEntity(output), HttpStatus.CREATED) ;
+        return new ResponseEntity<>(new SuccessResponseEntity(output), HttpStatus.CREATED);
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticationAndGetToken(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity< ? > authenticationAndGetToken(@RequestBody AuthRequest authRequest) {
         logger.info("Inside the authentication and get token method");
-        Authentication authentication =
-                authenticationManager.authenticate
-                        (new UsernamePasswordAuthenticationToken(authRequest.getUsername(),
-                                authRequest.getPassword()));
-        if (authentication.isAuthenticated()) {
-            logger.info("Token Generated Successfully!");
-            String tokenValue = jwtService.generateToken(authRequest.getUsername());
-            return new ResponseEntity<>(new AuthResponseEntity(tokenValue), HttpStatus.CREATED);
+        if (authRequest.getUsername().isBlank() && authRequest.getUsername().isEmpty() &&
+                authRequest.getPassword().isBlank() && authRequest.getPassword().isEmpty()) {
+            Authentication authentication =
+                    authenticationManager.authenticate
+                            (new UsernamePasswordAuthenticationToken(authRequest.getUsername(),
+                                    authRequest.getPassword()));
+            if (authentication.isAuthenticated()) {
+                logger.info("Token Generated Successfully!");
+                String tokenValue = jwtService.generateToken(authRequest.getUsername());
+                return new ResponseEntity<>(new AuthResponseEntity(tokenValue), HttpStatus.CREATED);
+            } else {
+                return new ResponseEntity<>(new ErrorResponseEntity("Invalid user request!"), HttpStatus.CONFLICT);
+            }
         } else {
-            return new ResponseEntity<>(new ErrorResponseEntity("Invalid user request!"), HttpStatus.CONFLICT);
+            return new ResponseEntity<>(new ErrorResponseEntity("username and password cannot be empty!"), HttpStatus.BAD_REQUEST);
         }
     }
 }
