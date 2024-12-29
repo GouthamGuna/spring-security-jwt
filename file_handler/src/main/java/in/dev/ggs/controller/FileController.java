@@ -6,7 +6,6 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,7 +29,6 @@ public class FileController {
     }
 
     @GetMapping("/stream/{filename:.+}")
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable String filename) throws ExecutionException, InterruptedException, FileNotFoundException {
 
         CompletableFuture<File> cfFile = fileStorageService.getFile(filename);

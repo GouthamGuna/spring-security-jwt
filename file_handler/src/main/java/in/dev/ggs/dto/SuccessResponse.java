@@ -7,8 +7,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @AllArgsConstructor
-public class AuthRequest {
+public class SuccessResponse {
 
-    private String username;
-    private String password;
+    private Object data;
 }

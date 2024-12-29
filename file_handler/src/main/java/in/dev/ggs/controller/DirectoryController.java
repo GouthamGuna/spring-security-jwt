@@ -10,7 +10,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,13 +36,11 @@ public class DirectoryController {
     }
 
     @PostMapping("/save-storage-path")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<DirectoryModel> saveDirectoryPath(@RequestBody DirectoryModel directoryModel) {
         return new ResponseEntity<>(directoryService.saveDirectoryPath(directoryModel), HttpStatus.CREATED);
     }
 
     @GetMapping("/get-storage-path")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<DirectoryModel> getDirectoryPath() {
         DirectoryModel directoryModel = new DirectoryModel();
         directoryModel.setDataStoragePath(directoryService.readFileContent());
@@ -51,14 +48,12 @@ public class DirectoryController {
     }
 
     @PostMapping("/upload-files")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public CompletableFuture<ResponseEntity<String>> uploadFiles(@RequestParam("files") List<MultipartFile> files) {
         return fileStorageService.storeFiles(files)
                 .thenApply(result -> new ResponseEntity<>(result, HttpStatus.CREATED));
     }
 
     @GetMapping("/get-files")
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     public CompletableFuture<ResponseEntity<DocumentStorageModel>> getFiles(
             @RequestParam(value = "filter", required = false) String filter) {
         if (filter == null) filter = "";
@@ -67,7 +62,6 @@ public class DirectoryController {
     }
 
     @GetMapping("/download/{filename}")
-    @PreAuthorize("hasAuthority('ROLE_USER') or hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<InputStreamResource> downloadFile(@PathVariable String filename) throws ExecutionException, InterruptedException, FileNotFoundException {
         CompletableFuture<File> file = fileStorageService.getFile(filename);
         File fileData = file.get();
@@ -82,7 +76,6 @@ public class DirectoryController {
     }
 
     @DeleteMapping("/delete/{fileName}")
-    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
         boolean isDeleted = fileStorageService.deleteFile(fileName);
         if (isDeleted) {
